@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <nav th:fragment="header" class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-sm">
+        <a class="navbar-brand fw-bold text-warning" th:href="@{/admin/home}">
+            <i class="bi bi-shield-lock-fill me-2"></i> ADMIN PANEL
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="adminNavbar">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link text-white" th:href="@{/admin/home}">
+                        <i class="bi bi-speedometer2 me-1"></i> Bảng điều khiển
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" th:href="@{/admin/categories}">
+                        <i class="bi bi-folder2-open me-1"></i> Quản lý danh mục
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white-50" th:href="@{/admin/products}">
+                        <i class="bi bi-box-seam me-1"></i> Quản lý sản phẩm
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white-50" th:href="@{/admin/users}">
+                        <i class="bi bi-people-fill me-1"></i> Quản lý người dùng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-info" th:href="@{/home}" target="_blank">
+                        <i class="bi bi-globe me-1"></i> Xem Web ngoài
+                    </a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-light small">Xin chào, <strong>Admin</strong></span>
+                <img th:src="@{/images/avatar.jpg}" 
+                     alt="Avatar" 
+                     class="rounded-circle border border-2 border-warning" 
+                     style="width: 40px; height: 40px; object-fit: cover;"
+                     onerror="this.src='https://placehold.co/40x40?text=Avatar'">
+                <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+</body>
+</html>

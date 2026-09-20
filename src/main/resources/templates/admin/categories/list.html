@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main-layout}">
+<head>
+    <title>Danh Sách Danh Mục</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-dark mb-0"><i class="bi bi-folder2-open me-2"></i>Quản Lý Danh Mục</h4>
+        <a th:href="@{/admin/category/add}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Thêm Danh Mục
+        </a>
+    </div>
+
+    <!-- Form Tìm kiếm -->
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            <form th:action="@{/admin/categories}" method="get" class="row g-2">
+                <div class="col-md-10">
+                    <input type="text" name="keyword" th:value="${keyword}" 
+                           class="form-control" placeholder="Nhập tên danh mục cần tìm kiếm...">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-dark w-100">
+                        <i class="bi bi-search me-1"></i> Tìm kiếm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bảng dữ liệu Category -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 80px;" class="text-center">ID</th>
+                        <th style="width: 120px;" class="text-center">Hình ảnh</th>
+                        <th>Tên Danh Mục</th>
+                        <th style="width: 140px;" class="text-center">Trạng thái</th>
+                        <th style="width: 160px;" class="text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="cat : ${categoryPage.content}">
+                        <td class="text-center fw-bold" th:text="${cat.categoryId}"></td>
+                        <td class="text-center">
+                            <img th:src="${cat.images != null && cat.images.startsWith('http')} ? ${cat.images} : @{'/image?fname=' + ${cat.images}}" 
+                                 class="rounded border" style="width: 50px; height: 50px; object-fit: cover;"
+                                 onerror="this.src='https://placehold.co/50x50?text=No+Img'">
+                        </td>
+                        <td th:text="${cat.categoryname}"></td>
+                        <td class="text-center">
+                            <span th:if="${cat.status == 1}" class="badge bg-success">Hoạt động</span>
+                            <span th:if="${cat.status == 0}" class="badge bg-danger">Khóa</span>
+                        </td>
+                        <td class="text-center">
+                            <a th:href="@{/admin/category/edit(id=${cat.categoryId})}" class="btn btn-sm btn-outline-warning me-1">
+                                <i class="bi bi-pencil-square"></i> Sửa
+                            </a>
+                            <a th:href="@{/admin/category/delete(id=${cat.categoryId})}" 
+                               class="btn btn-sm btn-outline-danger" 
+                               onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục này?')">
+                                <i class="bi bi-trash"></i> Xóa
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${categoryPage.totalElements == 0}">
+                        <td colspan="5" class="text-center py-4 text-muted">Không tìm thấy danh mục nào phù hợp!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Thanh phân trang (Pagination) -->
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3" 
+             th:if="${totalPages > 1}">
+            <span class="text-muted small">
+                Trang <b th:text="${currentPage}"></b> / <b th:text="${totalPages}"></b> 
+                (Tổng cộng <b th:text="${categoryPage.totalElements}"></b> bản ghi)
+            </span>
+            <ul class="pagination pagination-sm mb-0">
+                <!-- Nút Trước -->
+                <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/admin/categories(page=${currentPage - 1}, keyword=${keyword})}">Trước</a>
+                </li>
+                <!-- Danh sách số trang -->
+                <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}" 
+                    th:classappend="${currentPage == i} ? 'active'">
+                    <a class="page-link" th:href="@{/admin/categories(page=${i}, keyword=${keyword})}" th:text="${i}"></a>
+                </li>
+                <!-- Nút Sau -->
+                <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                    <a class="page-link" th:href="@{/admin/categories(page=${currentPage + 1}, keyword=${keyword})}">Sau</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>

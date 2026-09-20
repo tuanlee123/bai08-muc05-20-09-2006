@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Sản Phẩm - GraphQL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        .table > tbody > tr > td { vertical-align: middle; }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-warning" th:href="@{/graphql/home}">
+            <i class="bi bi-diagram-3-fill me-2"></i> GRAPHQL ADMIN
+        </a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" th:href="@{/graphql/home}"><i class="bi bi-house me-1"></i> Trang Chủ</a>
+            <a class="nav-link" th:href="@{/graphql/categories}"><i class="bi bi-folder2-open me-1"></i> Quản lý Category</a>
+            <a class="nav-link active" th:href="@{/graphql/products}"><i class="bi bi-box-seam me-1"></i> Quản lý Product</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0 text-dark">Quản Lý Sản Phẩm (GraphQL CRUD)</h3>
+            <small class="text-muted">Tìm kiếm, phân trang và cập nhật qua GraphQL Query & Mutation</small>
+        </div>
+        <button class="btn btn-primary fw-semibold shadow-sm" onclick="openAddProductModal()">
+            <i class="bi bi-plus-lg me-1"></i> Thêm Mới Sản Phẩm
+        </button>
+    </div>
+
+    <!-- Thanh Tìm kiếm -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" id="prodKeyword" class="form-control" placeholder="Nhập tên sản phẩm cần tìm...">
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-dark px-3" onclick="searchProd()"><i class="bi bi-search me-1"></i> Tìm kiếm</button>
+                    <button class="btn btn-outline-secondary" onclick="resetProdSearch()">Xóa bộ lọc</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng Product -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center" style="width: 90px;">#ID</th>
+                            <th>Tên sản phẩm</th>
+                            <th style="width: 160px;">Đơn giá</th>
+                            <th style="width: 180px;">Danh mục</th>
+                            <th class="text-center" style="width: 180px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTbody">
+                        <!-- AJAX Render -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Phân trang -->
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+            <span id="prodPageInfo" class="text-muted small"></span>
+            <ul class="pagination mb-0" id="prodPagination"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm/Sửa Product -->
+<div class="modal fade" id="prodModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold" id="prodModalTitle">Thêm Sản Phẩm</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="editProdId">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tên sản phẩm <span class="text-danger">*</span></label>
+                    <input type="text" id="pName" class="form-control" placeholder="Nhập tên sản phẩm..." required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
+                    <input type="number" id="pPrice" class="form-control" placeholder="0" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Danh mục <span class="text-danger">*</span></label>
+                    <select id="pCategory" class="form-select" required></select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Mô tả</label>
+                    <textarea id="pDesc" class="form-control" rows="3" placeholder="Mô tả sản phẩm..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary px-3" onclick="saveProduct()"><i class="bi bi-save me-1"></i> Lưu lại</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    var GRAPHQL_URL = /*[[@{/graphql}]]*/ '/graphql';
+    var currentProdPage = 0;
+    var prodPageSize = 5;
+    var currentProductsList = [];
+
+    function executeGraphQL(query, variables) {
+        return $.ajax({
+            url: GRAPHQL_URL,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ query: query, variables: variables || {} })
+        });
+    }
+
+    $(document).ready(function() {
+        loadCategorySelect();
+        loadProdPage(0);
+    });
+
+    function loadCategorySelect() {
+        var query = 'query { allCategories { categoryId categoryname } }';
+        executeGraphQL(query).done(function(res) {
+            var opts = '<option value="">-- Chọn danh mục --</option>';
+            if (res.data && res.data.allCategories) {
+                res.data.allCategories.forEach(function(c) {
+                    opts += '<option value="' + c.categoryId + '">' + c.categoryname + '</option>';
+                });
+            }
+            $('#pCategory').html(opts);
+        });
+    }
+
+    function searchProd() { 
+        loadProdPage(0); 
+    }
+
+    function resetProdSearch() { 
+        $('#prodKeyword').val(''); 
+        loadProdPage(0); 
+    }
+
+    // 1. Phân trang & Tìm kiếm Product bằng GraphQL
+    function loadProdPage(page) {
+        currentProdPage = page;
+        var kw = $('#prodKeyword').val();
+        var query = 'query GetProdsPaged($kw: String, $page: Int, $size: Int) {' +
+                    '  productsPaged(keyword: $kw, page: $page, size: $size) {' +
+                    '    content {' +
+                    '      productId' +
+                    '      productName' +
+                    '      price' +
+                    '      description' +
+                    '      category {' +
+                    '        categoryId' +
+                    '        categoryname' +
+                    '      }' +
+                    '    }' +
+                    '    totalPages' +
+                    '    totalElements' +
+                    '    currentPage' +
+                    '  }' +
+                    '}';
+
+        executeGraphQL(query, { kw: kw, page: page, size: prodPageSize }).done(function(res) {
+            if (res.data && res.data.productsPaged) {
+                var data = res.data.productsPaged;
+                currentProductsList = data.content || [];
+                renderProdTable(currentProductsList);
+                renderProdPagination(data.totalPages, data.currentPage, data.totalElements);
+            }
+        });
+    }
+
+    function renderProdTable(list) {
+        var html = '';
+        if (!list || list.length === 0) {
+            $('#productTbody').html('<tr><td colspan="5" class="text-center py-4 text-muted">Không tìm thấy sản phẩm.</td></tr>');
+            return;
+        }
+
+        for (var i = 0; i < list.length; i++) {
+            var p = list[i];
+            var catName = p.category ? p.category.categoryname : '<span class="text-muted fst-italic">Chưa gán</span>';
+            var formattedPrice = Number(p.price).toLocaleString('vi-VN') + ' đ';
+
+            html += '<tr>' +
+                '<td class="text-center fw-bold text-secondary">#' + p.productId + '</td>' +
+                '<td class="fw-semibold text-dark">' + p.productName + '</td>' +
+                '<td class="text-danger fw-bold">' + formattedPrice + '</td>' +
+                '<td><span class="badge bg-light text-dark border">' + catName + '</span></td>' +
+                '<td class="text-center">' +
+                    '<button type="button" class="btn btn-outline-warning btn-sm me-1" onclick="openEditProductModalByIndex(' + i + ')"><i class="bi bi-pencil-square"></i> Sửa</button>' +
+                    '<button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteProd(' + p.productId + ')"><i class="bi bi-trash"></i> Xóa</button>' +
+                '</td>' +
+            '</tr>';
+        }
+
+        $('#productTbody').html(html);
+    }
+
+    function renderProdPagination(totalPages, curPage, totalElements) {
+        var total = totalPages || 1;
+        $('#prodPageInfo').text('Tổng cộng: ' + totalElements + ' sản phẩm | Trang ' + (curPage + 1) + ' / ' + total);
+        var phtml = '';
+        for (var i = 0; i < totalPages; i++) {
+            var activeClass = (i === curPage) ? ' active' : '';
+            phtml += '<li class="page-item' + activeClass + '"><button type="button" class="page-link" onclick="loadProdPage(' + i + ')">' + (i + 1) + '</button></li>';
+        }
+        $('#prodPagination').html(phtml);
+    }
+
+    function openAddProductModal() {
+        $('#editProdId').val('');
+        $('#pName').val('');
+        $('#pPrice').val('');
+        $('#pDesc').val('');
+        $('#pCategory').val('');
+        $('#prodModalTitle').text('Thêm Mới Sản Phẩm');
+        $('#prodModal').modal('show');
+    }
+
+    function openEditProductModalByIndex(index) {
+        var p = currentProductsList[index];
+        if (!p) return;
+
+        $('#editProdId').val(p.productId);
+        $('#pName').val(p.productName);
+        $('#pPrice').val(p.price);
+        $('#pDesc').val(p.description || '');
+        if (p.category) {
+            $('#pCategory').val(p.category.categoryId);
+        } else {
+            $('#pCategory').val('');
+        }
+        $('#prodModalTitle').text('Cập Nhật Sản Phẩm');
+        $('#prodModal').modal('show');
+    }
+
+    // 2. Thêm / Sửa qua GraphQL Mutation
+    function saveProduct() {
+        var id = $('#editProdId').val();
+        var name = $('#pName').val();
+        var price = parseFloat($('#pPrice').val());
+        var desc = $('#pDesc').val();
+        var catId = $('#pCategory').val();
+
+        if (!name.trim() || isNaN(price) || !catId) {
+            alert('Vui lòng điền đầy đủ tên, giá và chọn danh mục!');
+            return;
+        }
+
+        var inputData = {
+            productName: name,
+            price: price,
+            description: desc,
+            categoryId: catId
+        };
+
+        if (!id) {
+            var createMutation = 'mutation AddProd($input: ProductInput!) {' +
+                                 '  createProduct(input: $input) {' +
+                                 '    productId' +
+                                 '  }' +
+                                 '}';
+            executeGraphQL(createMutation, { input: inputData }).done(function() {
+                alert('Thêm sản phẩm thành công!');
+                $('#prodModal').modal('hide');
+                loadProdPage(0);
+            });
+        } else {
+            var updateMutation = 'mutation UpProd($id: ID!, $input: ProductInput!) {' +
+                                 '  updateProduct(id: $id, input: $input) {' +
+                                 '    productId' +
+                                 '  }' +
+                                 '}';
+            executeGraphQL(updateMutation, { id: id, input: inputData }).done(function() {
+                alert('Cập nhật sản phẩm thành công!');
+                $('#prodModal').modal('hide');
+                loadProdPage(currentProdPage);
+            });
+        }
+    }
+
+    // 3. Xóa qua GraphQL Mutation
+    function deleteProd(id) {
+        if (confirm('Bạn có chắc chắn muốn xóa sản phẩm ID #' + id + '?')) {
+            var delMutation = 'mutation DelProd($id: ID!) {' +
+                              '  deleteProduct(id: $id)' +
+                              '}';
+            executeGraphQL(delMutation, { id: id }).done(function(res) {
+                if (res.data && res.data.deleteProduct) {
+                    alert('Đã xóa thành công!');
+                    loadProdPage(currentProdPage);
+                }
+            });
+        }
+    }
+</script>
+</body>
+</html>
